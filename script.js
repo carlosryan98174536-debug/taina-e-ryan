@@ -1,27 +1,47 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // --- Persistence Logic ---
-    function generateShareData() {
-        const data = {
-            title: document.getElementById('input-album-title').value,
-            date: document.getElementById('input-date').value,
-            type: document.getElementById('input-type').value,
-            message: document.getElementById('input-message').value,
-            youtube: document.getElementById('input-youtube').value,
-            photos: uploadedImages  // All images are now compressed and URL-safe
-        };
-        return btoa(unescape(encodeURIComponent(JSON.stringify(data))));
+    // --- Persistence Logic via GitHub Gist API ---
+    async function saveAlbumToGist(albumData) {
+        const response = await fetch('https://api.github.com/gists', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/vnd.github.v3+json' },
+            body: JSON.stringify({
+                public: true,
+                files: { 'album.json': { content: JSON.stringify(albumData) } }
+            })
+        });
+        if (!response.ok) throw new Error('Falha ao salvar. Tente novamente.');
+        const gist = await response.json();
+        return gist.id;
     }
 
-    function loadFromUrl() {
+    async function loadAlbumFromGist(gistId) {
+        const response = await fetch(`https://api.github.com/gists/${gistId}`);
+        if (!response.ok) throw new Error('Álbum não encontrado.');
+        const gist = await response.json();
+        return JSON.parse(gist.files['album.json'].content);
+    }
+
+    async function loadFromUrl() {
         const params = new URLSearchParams(window.location.search);
-        const dataParam = params.get('data');
-        if (dataParam) {
+        const gistId = params.get('gist');
+        const dataParam = params.get('data'); // Legacy support
+
+        if (gistId) {
+            try {
+                const albumData = await loadAlbumFromGist(gistId);
+                applyDataToAlbum(albumData);
+                showFinalAlbum(true);
+            } catch (e) {
+                console.error('Erro ao carregar álbum:', e);
+            }
+        } else if (dataParam) {
+            // Legacy: URL-encoded data
             try {
                 const decoded = JSON.parse(decodeURIComponent(escape(atob(dataParam))));
                 applyDataToAlbum(decoded);
-                showFinalAlbum(true); // Flag to skip wizard
+                showFinalAlbum(true);
             } catch (e) {
-                console.error("Erro ao carregar dados da URL", e);
+                console.error('Erro ao carregar dados da URL', e);
             }
         }
     }
@@ -330,14 +350,33 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Share Logic
-    document.getElementById('btn-share').addEventListener('click', () => {
-        const baseUrl = window.location.href.split('?')[0];
-        const dataString = generateShareData();
-        const shareUrl = `${baseUrl}?data=${encodeURIComponent(dataString)}`;
+    document.getElementById('btn-share').addEventListener('click', async () => {
+        const shareBtn = document.getElementById('btn-share');
+        shareBtn.disabled = true;
+        shareBtn.innerText = 'Salvando...';
 
-        navigator.clipboard.writeText(shareUrl).then(() => {
-            alert('Link do álbum copiado! Agora você pode enviar para o seu amor.');
-        });
+        try {
+            const albumData = {
+                title: document.getElementById('input-album-title').value,
+                date: document.getElementById('input-date').value,
+                type: document.getElementById('input-type').value,
+                message: document.getElementById('input-message').value,
+                youtube: document.getElementById('input-youtube').value,
+                photos: uploadedImages
+            };
+
+            const gistId = await saveAlbumToGist(albumData);
+            const baseUrl = window.location.href.split('?')[0];
+            const shareUrl = `${baseUrl}?gist=${gistId}`;
+
+            await navigator.clipboard.writeText(shareUrl);
+            alert('Link copiado! \u2764\uFE0F\nEnvie agora para o seu amor.');
+        } catch (err) {
+            alert('Erro ao gerar link: ' + err.message);
+        } finally {
+            shareBtn.disabled = false;
+            shareBtn.innerHTML = '<i class="fas fa-share-alt"></i> Compartilhar Link';
+        }
     });
 
     // Initialize
