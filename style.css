@@ -1,36 +1,42 @@
 :root {
-    --bg-dark: #000000;
-    --card-dark: #121212;
-    --card-border: #222222;
     --accent-pink: #ff4d6d;
-    --accent-purple: #c9184a;
+    --accent-dark-pink: #c9184a;
+    --bg-dark: #000000;
+    --card-dark: #121212; /* Kept from original */
+    --card-border: #222222; /* Kept from original */
+    --card-bg: #0a0a0a;
     --text-white: #ffffff;
-    --text-muted: #999999;
-    --gradient-main: linear-gradient(135deg, #c9184a, #ff4d6d);
-    --font-main: 'Montserrat', sans-serif;
+    --text-muted: #888;
+    --grad: linear-gradient(135deg, var(--accent-dark-pink), var(--accent-pink));
 }
 
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    font-family: 'Montserrat', sans-serif;
+    -webkit-tap-highlight-color: transparent;
 }
 
 body {
-    background-color: var(--bg-dark);
+    background: var(--bg-dark);
     color: var(--text-white);
-    font-family: var(--font-main);
-    overflow: hidden;
+    line-height: 1.6;
+    overflow-x: hidden;
 }
 
 /* Header */
 header {
-    height: 60px;
-    padding: 0 40px;
+    padding: 15px 20px;
     display: flex;
-    align-items: center;
     justify-content: space-between;
-    border-bottom: 1px solid var(--card-border);
+    align-items: center;
+    border-bottom: 1px solid #1a1a1a;
+    position: sticky;
+    top: 0;
+    background: rgba(0,0,0,0.8);
+    backdrop-filter: blur(10px);
+    z-index: 100;
 }
 
 .logo {
@@ -47,27 +53,50 @@ header {
 
 /* Main Layout */
 main {
-    display: flex;
-    height: calc(100vh - 60px);
+    display: grid;
+    grid-template-columns: 1fr; /* Stack on mobile */
+    min-height: calc(100vh - 70px);
+}
+
+@media (min-width: 1024px) {
+    main {
+        grid-template-columns: 1fr 1fr;
+    }
 }
 
 .creator-panel {
-    flex: 1;
-    padding: 40px;
+    padding: 30px 20px;
+    max-width: 600px;
+    margin: 0 auto;
+    width: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
     overflow-y: auto;
 }
 
+@media (min-width: 1024px) {
+    .creator-panel {
+        padding: 60px;
+        margin: 0;
+    }
+}
+
 .preview-panel {
-    flex: 1;
-    background-color: #050505;
+    background: #050505;
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
-    padding: 20px;
+    padding: 40px 20px;
     position: relative;
+    border-left: 1px solid #111;
+}
+
+@media (max-width: 1023px) {
+    .preview-panel {
+        display: none; /* Hide preview on mobile wizard */
+    }
 }
 
 /* Step Indicator */
@@ -94,7 +123,7 @@ main {
 }
 
 .step-btn.active {
-    background: var(--gradient-main);
+    background: var(--grad);
     width: 90px;
     border-radius: 20px;
 }
@@ -186,7 +215,7 @@ input:focus {
 }
 
 .btn-primary {
-    background: var(--gradient-main);
+    background: var(--grad);
     color: white;
 }
 
