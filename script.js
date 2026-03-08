@@ -3,18 +3,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function buildShareUrl(albumData) {
         const json = JSON.stringify(albumData);
-        // Use TextEncoder for proper UTF-8 → binary → base64 encoding
         const bytes = new TextEncoder().encode(json);
         let binary = '';
         bytes.forEach(b => binary += String.fromCharCode(b));
-        const encoded = btoa(binary);
+        // base64url: replace +→- and /→_ and remove = padding
+        // These chars are URL-safe and messengers (WhatsApp etc.) won't corrupt them
+        const encoded = btoa(binary)
+            .replace(/\+/g, '-')
+            .replace(/\//g, '_')
+            .replace(/=/g, '');
         const base = window.location.href.split('?')[0];
-        return `${base}?d=${encodeURIComponent(encoded)}`;
+        return `${base}?d=${encoded}`; // No encodeURIComponent needed!
     }
 
     function decodeShareParam(encoded) {
-        // base64 → binary → UTF-8 bytes → string
-        const binary = atob(encoded);
+        // Restore standard base64 from base64url
+        const pad = '=='.slice(0, (4 - encoded.length % 4) % 4);
+        const base64 = encoded.replace(/-/g, '+').replace(/_/g, '/') + pad;
+        const binary = atob(base64);
         const bytes = new Uint8Array(binary.length);
         for (let i = 0; i < binary.length; i++) {
             bytes[i] = binary.charCodeAt(i);
@@ -288,8 +294,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Compress an image aggressively so it fits in a shared URL (150px, quality 0.12 ≈ ~1-2KB)
-    function compressImage(dataUrl, maxWidth = 150, quality = 0.12) {
+    // Ultra-small compression so photos fit in a shareable URL (~0.5-1.5KB per photo)
+    function compressImage(dataUrl, maxWidth = 100, quality = 0.1) {
         return new Promise((resolve) => {
             const img = new Image();
             img.onload = () => {
