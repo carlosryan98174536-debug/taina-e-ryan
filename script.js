@@ -1,19 +1,19 @@
 document.addEventListener('DOMContentLoaded', () => {
     // --- Persistence Logic: URL-based (no external API, pure JS) ---
 
-    // Compress a photo to tiny size specifically for URL sharing (60px, quality 0.08 ≈ ~400-700 bytes)
+    // Compress a photo for URL sharing — 300px at 50% quality (good with 1 photo)
     function compressForUrl(dataUrl) {
         return new Promise(resolve => {
             const img = new Image();
             img.onload = () => {
                 const canvas = document.createElement('canvas');
-                const maxW = 60;
+                const maxW = 300;
                 let w = img.width, h = img.height;
                 if (w > maxW) { h = Math.round(h * maxW / w); w = maxW; }
                 canvas.width = w;
                 canvas.height = h;
                 canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-                resolve(canvas.toDataURL('image/jpeg', 0.08));
+                resolve(canvas.toDataURL('image/jpeg', 0.5));
             };
             img.src = dataUrl;
         });
@@ -318,8 +318,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Compress on upload for display quality (200px, quality 0.4 — looks good in the album)
-    function compressImage(dataUrl, maxWidth = 200, quality = 0.4) {
+    // Compress on upload for display (500px, quality 0.7 — high display quality)
+    function compressImage(dataUrl, maxWidth = 500, quality = 0.7) {
         return new Promise((resolve) => {
             const img = new Image();
             img.onload = () => {
