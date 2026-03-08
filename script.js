@@ -1,49 +1,25 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // --- Persistence Logic via jsonblob.com (free, no auth) ---
-    async function saveAlbumToCloud(albumData) {
-        const response = await fetch('https://jsonblob.com/api/jsonBlob', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify(albumData)
-        });
-        if (!response.ok) throw new Error('Falha ao salvar (' + response.status + ')');
-        // jsonblob returns the blob URL in the Location header
-        const location = response.headers.get('Location');
-        if (!location) throw new Error('Servidor não retornou o ID do álbum.');
-        return location.split('/').pop(); // extract the ID from the URL
+    // --- Persistence Logic: URL-based (no external API) ---
+    function buildShareUrl(albumData) {
+        // Encode album data as base64 in the URL fragment
+        const json = JSON.stringify(albumData);
+        const encoded = btoa(unescape(encodeURIComponent(json)));
+        const base = window.location.href.split('?')[0];
+        return `${base}?d=${encodeURIComponent(encoded)}`;
     }
 
-    async function loadAlbumFromCloud(blobId) {
-        const response = await fetch(`https://jsonblob.com/api/jsonBlob/${blobId}`);
-        if (!response.ok) throw new Error('Álbum não encontrado.');
-        return await response.json();
-    }
-
-    async function loadFromUrl() {
+    function loadFromUrl() {
         const params = new URLSearchParams(window.location.search);
-        const blobId = params.get('gist');
-        const dataParam = params.get('data'); // Legacy support
-
-        if (blobId) {
-            try {
-                const albumData = await loadAlbumFromCloud(blobId);
-                applyDataToAlbum(albumData);
-                showFinalAlbum(true);
-            } catch (e) {
-                console.error('Erro ao carregar álbum:', e);
-            }
-        } else if (dataParam) {
-            // Legacy: URL-encoded data
-            try {
-                const decoded = JSON.parse(decodeURIComponent(escape(atob(dataParam))));
-                applyDataToAlbum(decoded);
-                showFinalAlbum(true);
-            } catch (e) {
-                console.error('Erro ao carregar dados da URL', e);
-            }
+        const encoded = params.get('d') || params.get('data') || params.get('gist');
+        if (!encoded) return;
+        try {
+            // Try direct base64 decode first (new format)
+            const json = decodeURIComponent(escape(atob(encoded)));
+            const data = JSON.parse(json);
+            applyDataToAlbum(data);
+            showFinalAlbum(true);
+        } catch (e) {
+            console.error('Erro ao carregar álbum:', e);
         }
     }
 
@@ -55,9 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (data.youtube) document.getElementById('input-youtube').value = data.youtube;
         if (data.photos && data.photos.length > 0) {
             uploadedImages = data.photos;
-            updatePreview();
         }
-        updateCounter();
     }
     let currentStep = 1;
 
@@ -295,8 +269,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Compress an image using canvas for URL sharing
-    function compressImage(dataUrl, maxWidth = 600, quality = 0.5) {
+    // Compress an image using canvas for URL sharing (aggressive: small size for URL)
+    function compressImage(dataUrl, maxWidth = 200, quality = 0.15) {
         return new Promise((resolve) => {
             const img = new Image();
             img.onload = () => {
@@ -387,10 +361,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Share Logic
-    document.getElementById('btn-share').addEventListener('click', async () => {
+    document.getElementById('btn-share').addEventListener('click', () => {
         const shareBtn = document.getElementById('btn-share');
         shareBtn.disabled = true;
-        shareBtn.innerText = 'Salvando...';
+        shareBtn.innerText = 'Gerando link...';
 
         try {
             const albumData = {
@@ -402,12 +376,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 photos: uploadedImages
             };
 
-            const gistId = await saveAlbumToCloud(albumData);
-            const baseUrl = window.location.href.split('?')[0];
-            const shareUrl = `${baseUrl}?gist=${gistId}`;
-
-            await navigator.clipboard.writeText(shareUrl);
-            alert('Link copiado! \u2764\uFE0F\nEnvie agora para o seu amor.');
+            const shareUrl = buildShareUrl(albumData);
+            navigator.clipboard.writeText(shareUrl).then(() => {
+                alert('Link copiado! ❤️\nEnvie agora para o seu amor.');
+            });
         } catch (err) {
             alert('Erro ao gerar link: ' + err.message);
         } finally {
