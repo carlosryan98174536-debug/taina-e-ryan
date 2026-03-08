@@ -1,25 +1,44 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // --- Persistence Logic: URL-based (no external API) ---
+    // --- Persistence Logic: URL-based (no external API, pure JS) ---
+
     function buildShareUrl(albumData) {
-        // Encode album data as base64 in the URL fragment
         const json = JSON.stringify(albumData);
-        const encoded = btoa(unescape(encodeURIComponent(json)));
+        // Use TextEncoder for proper UTF-8 → binary → base64 encoding
+        const bytes = new TextEncoder().encode(json);
+        let binary = '';
+        bytes.forEach(b => binary += String.fromCharCode(b));
+        const encoded = btoa(binary);
         const base = window.location.href.split('?')[0];
         return `${base}?d=${encodeURIComponent(encoded)}`;
     }
 
+    function decodeShareParam(encoded) {
+        // base64 → binary → UTF-8 bytes → string
+        const binary = atob(encoded);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) {
+            bytes[i] = binary.charCodeAt(i);
+        }
+        return new TextDecoder().decode(bytes);
+    }
+
     function loadFromUrl() {
         const params = new URLSearchParams(window.location.search);
-        const encoded = params.get('d') || params.get('data') || params.get('gist');
+        const encoded = params.get('d');
         if (!encoded) return;
         try {
-            // Try direct base64 decode first (new format)
-            const json = decodeURIComponent(escape(atob(encoded)));
+            const json = decodeShareParam(encoded);
             const data = JSON.parse(json);
             applyDataToAlbum(data);
             showFinalAlbum(true);
         } catch (e) {
             console.error('Erro ao carregar álbum:', e);
+            // Show visible error to help diagnose
+            document.body.insertAdjacentHTML('afterbegin',
+                `<div style="background:#c9184a;color:white;padding:15px;text-align:center;position:fixed;top:0;width:100%;z-index:9999;font-size:14px">
+                    Erro ao carregar álbum. Tente gerar um novo link.
+                </div>`
+            );
         }
     }
 
@@ -269,8 +288,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Compress an image using canvas for URL sharing (aggressive: small size for URL)
-    function compressImage(dataUrl, maxWidth = 200, quality = 0.15) {
+    // Compress an image aggressively so it fits in a shared URL (150px, quality 0.12 ≈ ~1-2KB)
+    function compressImage(dataUrl, maxWidth = 150, quality = 0.12) {
         return new Promise((resolve) => {
             const img = new Image();
             img.onload = () => {
