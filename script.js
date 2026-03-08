@@ -157,28 +157,64 @@ document.addEventListener('DOMContentLoaded', () => {
         const finalView = document.getElementById('final-album-view');
         finalView.classList.remove('hidden');
 
-        // Ensure updateCounter is called to refresh UI
-        updateCounter();
+        // --- Populate text data directly from inputs ---
+        const title = document.getElementById('input-album-title').value || 'Nosso Álbum';
+        const dateVal = document.getElementById('input-date').value;
+        const typeVal = document.getElementById('input-type').value;
+        const message = document.getElementById('input-message').value;
 
-        // Populate Data
-        document.getElementById('final-title').innerText = document.getElementById('input-album-title').value || 'Nosso Álbum';
-        document.getElementById('final-counter').innerText = previewCounter.innerText;
-        document.getElementById('final-message').innerText = document.getElementById('input-message').value;
+        document.getElementById('final-title').innerText = title;
+        document.getElementById('final-message').innerText = message;
 
-        const videoID = extractVideoID(inputYoutube.value);
+        // Counter
+        if (dateVal) {
+            const start = new Date(dateVal);
+            const now = new Date();
+            const diffDays = Math.ceil(Math.abs(now - start) / (1000 * 60 * 60 * 24));
+            document.getElementById('final-counter').innerText = `${diffDays} dias ${typeVal}`;
+        }
+
+        // Video
+        const videoID = extractVideoID(document.getElementById('input-youtube').value);
         if (videoID) {
             document.getElementById('final-iframe').src = `https://www.youtube.com/embed/${videoID}?autoplay=1&mute=0&enablejsapi=1`;
         } else {
             document.getElementById('final-video-container').style.display = 'none';
         }
 
-        // Photo logic in final view
-        if (uploadedImages.length > 0) {
-            updatePreview();
-            startSlideshow();
+        // --- Photos: direct final view slideshow, independent of wizard ---
+        const finalImg = document.getElementById('final-img');
+        const finalDots = document.getElementById('final-dots');
+        const finalCarousel = document.getElementById('final-carousel');
+
+        if (uploadedImages.length > 0 && finalImg) {
+            finalCarousel.style.display = 'block';
+            let finalIdx = 0;
+
+            function showFinalPhoto(idx) {
+                finalImg.src = uploadedImages[idx];
+                if (finalDots) {
+                    finalDots.innerHTML = '';
+                    uploadedImages.forEach((_, i) => {
+                        const dot = document.createElement('div');
+                        dot.classList.add('dot');
+                        if (i === idx) dot.classList.add('active');
+                        finalDots.appendChild(dot);
+                    });
+                }
+            }
+
+            showFinalPhoto(0);
+
+            if (uploadedImages.length > 1) {
+                setInterval(() => {
+                    finalIdx = (finalIdx + 1) % uploadedImages.length;
+                    showFinalPhoto(finalIdx);
+                }, 5000);
+            }
         }
 
-        // Start hearts in final view
+        // Start hearts
         const finalHearts = document.getElementById('final-hearts');
         if (finalHearts) {
             setInterval(() => {
