@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MeuAlbum - Criar Página</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600&family=Montserrat:wght@300;400;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <header>
+        <div class="logo">
+            <i class="fas fa-book-open"></i>
+            <span>MeuAlbum</span>
+        </div>
+        <div class="lang-selector">
+            <i class="fas fa-globe"></i> BR
+        </div>
+    </header>
+
+    <main>
+        <section class="creator-panel">
+            <div class="step-indicator">
+                <button class="step-btn active" data-step="1">1</button>
+                <button class="step-btn" data-step="2">2</button>
+                <button class="step-btn" data-step="3">3</button>
+                <button class="step-btn" data-step="4">4</button>
+                <button class="step-btn" data-step="5">5</button>
+                <button class="step-btn" data-step="6">6</button>
+                <button class="step-btn" data-step="7">7</button>
+            </div>
+
+            <!-- Step 1: Page Name -->
+            <div class="wizard-card active" id="wizard-1">
+                <h2>Nome da Página</h2>
+                <p>Escreva o nome do seu album — algo único, especial e cheio de significado ou qualquer nome que faça
+                    sentido pra você.</p>
+                <label>Nome da Página *</label>
+                <input type="text" id="input-page-name" placeholder="Ex: Nosso Primeiro Ano">
+                <div class="warning-box">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Acentos e caracteres especiais não são permitidos no link.
+                </div>
+                <div class="btn-group">
+                    <button class="btn btn-secondary">Voltar</button>
+                    <button class="btn btn-primary btn-next">Próximo ></button>
+                </div>
+            </div>
+
+            <!-- Step 2: Album Title -->
+            <div class="wizard-card" id="wizard-2">
+                <h2>Título do Álbum</h2>
+                <p>Escolha um nome único para seu album — algo que carregue sentimento, história e significado.</p>
+                <label>Título do Álbum *</label>
+                <input type="text" id="input-album-title" placeholder="Ex: Para Meu Amor">
+                <div class="btn-group">
+                    <button class="btn btn-secondary btn-prev">Voltar</button>
+                    <button class="btn btn-primary btn-next">Próximo ></button>
+                </div>
+            </div>
+
+            <!-- Step 3: Date -->
+            <div class="wizard-card" id="wizard-3">
+                <h2>Contador de Tempo</h2>
+                <p>Selecione a data de início que simbolize o começo do relacionamento.</p>
+                <label>Data Especial</label>
+                <input type="date" id="input-date">
+                <label>Como descrever?</label>
+                <select id="input-type">
+                    <option value="juntos">Juntos</option>
+                    <option value="casados">Casados</option>
+                    <option value="conhecemos">Se Conhecemos</option>
+                </select>
+                <div class="btn-group">
+                    <button class="btn btn-secondary btn-prev">Voltar</button>
+                    <button class="btn btn-primary btn-next">Próximo ></button>
+                </div>
+            </div>
+
+            <!-- Step 4: Message -->
+            <div class="wizard-card" id="wizard-4">
+                <h2>Mensagem</h2>
+                <p>Conte a história por trás da sua memória. Um "eu te amo" sincero.</p>
+                <label>Sua Mensagem</label>
+                <textarea id="input-message" rows="4" placeholder="Escreva aqui seu carinho..."></textarea>
+                <div class="btn-group">
+                    <button class="btn btn-secondary btn-prev">Voltar</button>
+                    <button class="btn btn-primary btn-next">Próximo ></button>
+                </div>
+            </div>
+
+            <!-- Step 5: Fotos -->
+            <div class="wizard-card" id="wizard-5">
+                <h2>Fotos</h2>
+                <p>Use imagens que contam uma história. Elas vão dar vida ao seu album.</p>
+                <div
+                    style="border: 2px dashed #333; padding: 40px; border-radius: 20px; text-align: center; margin-bottom: 20px;">
+                    <i class="fas fa-images"
+                        style="font-size: 2rem; color: var(--accent-pink); margin-bottom: 15px;"></i><br>
+                    <button class="btn btn-primary" style="padding: 10px 20px; font-size: 0.8rem;">Selecionar
+                        Fotos</button>
+                    <p style="margin-top: 10px; font-size: 0.7rem;">0 de 7 imagens adicionadas</p>
+                </div>
+                <div class="btn-group">
+                    <button class="btn btn-secondary btn-prev">Voltar</button>
+                    <button class="btn btn-primary btn-next">Próximo ></button>
+                </div>
+            </div>
+
+            <!-- Step 6: Video -->
+            <div class="wizard-card" id="wizard-6">
+                <h2>Vídeo do YouTube</h2>
+                <p>Adicione uma música ou vídeo que marcou vocês. Basta colar o link abaixo.</p>
+                <label>Link do YouTube</label>
+                <input type="text" id="input-youtube" placeholder="https://www.youtube.com/watch?v=...">
+                <div class="btn-group">
+                    <button class="btn btn-secondary btn-prev">Voltar</button>
+                    <button class="btn btn-primary btn-next">Próximo ></button>
+                </div>
+            </div>
+
+            <!-- Step 7: Finish -->
+            <div class="wizard-card" id="wizard-7">
+                <h2>Tudo Pronto!</h2>
+                <p>Sua página romântica está pronta para ser compartilhada.</p>
+                <div class="btn-group">
+                    <button class="btn btn-secondary btn-prev">Voltar</button>
+                    <button class="btn btn-primary" id="btn-finish">Criar Album</button>
+                </div>
+            </div>
+
+        </section>
+
+        <section class="preview-panel">
+            <p style="position: absolute; top: 20px; font-weight: 600;">Como vai ficar 👇</p>
+            <div class="phone-mockup">
+                <div class="phone-notch"></div>
+                <div class="phone-screen">
+                    <div class="heart-bg" id="preview-hearts"></div>
+                    <div id="preview-link" style="color: rgba(255,255,255,0.3); font-size: 0.7rem; margin-top: 10px;">
+                        meualbum.com/seu-link</div>
+                    <h1 id="preview-title">Seu Álbum</h1>
+                    <div id="preview-counter">-- dias juntos</div>
+                    <p id="preview-message" style="margin-top: 20px; font-size: 0.9rem;"></p>
+                    <div id="preview-video-container"
+                        style="margin-top: 20px; width: 100%; border-radius: 10px; overflow: hidden; display: none;">
+                        <iframe id="preview-iframe" width="100%" height="150" src="" frameborder="0"
+                            allow="autoplay; encrypted-media"></iframe>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
