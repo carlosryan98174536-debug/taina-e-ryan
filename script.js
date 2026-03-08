@@ -1,34 +1,35 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // --- Persistence Logic via GitHub Gist API ---
-    async function saveAlbumToGist(albumData) {
-        const response = await fetch('https://api.github.com/gists', {
+    // --- Persistence Logic via jsonblob.com (free, no auth) ---
+    async function saveAlbumToCloud(albumData) {
+        const response = await fetch('https://jsonblob.com/api/jsonBlob', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Accept': 'application/vnd.github.v3+json' },
-            body: JSON.stringify({
-                public: true,
-                files: { 'album.json': { content: JSON.stringify(albumData) } }
-            })
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(albumData)
         });
-        if (!response.ok) throw new Error('Falha ao salvar. Tente novamente.');
-        const gist = await response.json();
-        return gist.id;
+        if (!response.ok) throw new Error('Falha ao salvar (' + response.status + ')');
+        // jsonblob returns the blob URL in the Location header
+        const location = response.headers.get('Location');
+        if (!location) throw new Error('Servidor não retornou o ID do álbum.');
+        return location.split('/').pop(); // extract the ID from the URL
     }
 
-    async function loadAlbumFromGist(gistId) {
-        const response = await fetch(`https://api.github.com/gists/${gistId}`);
+    async function loadAlbumFromCloud(blobId) {
+        const response = await fetch(`https://jsonblob.com/api/jsonBlob/${blobId}`);
         if (!response.ok) throw new Error('Álbum não encontrado.');
-        const gist = await response.json();
-        return JSON.parse(gist.files['album.json'].content);
+        return await response.json();
     }
 
     async function loadFromUrl() {
         const params = new URLSearchParams(window.location.search);
-        const gistId = params.get('gist');
+        const blobId = params.get('gist');
         const dataParam = params.get('data'); // Legacy support
 
-        if (gistId) {
+        if (blobId) {
             try {
-                const albumData = await loadAlbumFromGist(gistId);
+                const albumData = await loadAlbumFromCloud(blobId);
                 applyDataToAlbum(albumData);
                 showFinalAlbum(true);
             } catch (e) {
@@ -365,7 +366,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 photos: uploadedImages
             };
 
-            const gistId = await saveAlbumToGist(albumData);
+            const gistId = await saveAlbumToCloud(albumData);
             const baseUrl = window.location.href.split('?')[0];
             const shareUrl = `${baseUrl}?gist=${gistId}`;
 
