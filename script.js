@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
             type: document.getElementById('input-type').value,
             message: document.getElementById('input-message').value,
             youtube: document.getElementById('input-youtube').value,
-            photos: uploadedImages.filter(img => !img.startsWith('data:')) // Only share non-Base64 URLs for now
+            photos: uploadedImages  // All images are now compressed and URL-safe
         };
         return btoa(unescape(encodeURIComponent(JSON.stringify(data))));
     }
@@ -213,8 +213,9 @@ document.addEventListener('DOMContentLoaded', () => {
         files.forEach(file => {
             if (uploadedImages.length >= 7) return;
             const reader = new FileReader();
-            reader.onload = (event) => {
-                uploadedImages.push(event.target.result);
+            reader.onload = async (event) => {
+                const compressed = await compressImage(event.target.result);
+                uploadedImages.push(compressed);
                 renderThumbnails();
                 startSlideshow();
                 updatePreview();
@@ -234,6 +235,27 @@ document.addEventListener('DOMContentLoaded', () => {
             renderThumbnails();
             updatePreview();
             startSlideshow();
+        });
+    }
+
+    // Compress an image using canvas for URL sharing
+    function compressImage(dataUrl, maxWidth = 600, quality = 0.5) {
+        return new Promise((resolve) => {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                let w = img.width;
+                let h = img.height;
+                if (w > maxWidth) {
+                    h = Math.round(h * maxWidth / w);
+                    w = maxWidth;
+                }
+                canvas.width = w;
+                canvas.height = h;
+                canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                resolve(canvas.toDataURL('image/jpeg', quality));
+            };
+            img.src = dataUrl;
         });
     }
 
